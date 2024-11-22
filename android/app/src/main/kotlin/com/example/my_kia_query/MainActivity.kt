@@ -1,22 +1,23 @@
 package com.example.my_kia_query
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
+import androidx.annotation.NonNull
 
-class MainActivity: FlutterActivity() {
+class MainActivity: FlutterFragmentActivity() {
     private val CHANNEL = "com.example.my_kia_query/kia_bridge"
     private var python: Python? = null
     private var kiaBridgeModule: com.chaquo.python.PyObject? = null
 
-    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+    override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
         // Initialize Python
         if (!Python.isStarted()) {
-            Python.start(AndroidPlatform(context))
+            Python.start(AndroidPlatform(applicationContext))
         }
         python = Python.getInstance()
         kiaBridgeModule = python?.getModule("kia_bridge")

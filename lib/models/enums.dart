@@ -1,3 +1,6 @@
+import 'package:json_annotation/json_annotation.dart';
+
+@JsonEnum()
 enum Region {
   europe,
   canada,
@@ -27,6 +30,7 @@ enum Region {
   }
 }
 
+@JsonEnum()
 enum Brand {
   kia,
   hyundai;
