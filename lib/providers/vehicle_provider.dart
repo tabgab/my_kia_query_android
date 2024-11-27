@@ -177,13 +177,6 @@ class VehicleProvider extends ChangeNotifier {
     return 'N/A';
   }
 
-  String getFormattedTirePressure(double? pressure) {
-    if (pressure != null) {
-      return '${pressure.toStringAsFixed(1)} bar';
-    }
-    return 'N/A';
-  }
-
   String getFormattedTemperature(Vehicle vehicle) {
     final temp = vehicle.status?.airTemperature;
     if (temp?.value != null) {

@@ -54,12 +54,11 @@ class VehicleStatus {
   final bool? doorLock;
   final AirTemperature? airTemperature;
   final Location? location;
-  // Additional fields
   final bool? defrost;
   final bool? steeringWheelHeat;
   final bool? sideBackWindowHeat;
-  final TirePressure? tirePressure;
   final EvStatus? evStatus;
+  final ConsumptionData? consumption;
 
   VehicleStatus({
     this.engine,
@@ -80,11 +79,45 @@ class VehicleStatus {
     this.defrost,
     this.steeringWheelHeat,
     this.sideBackWindowHeat,
-    this.tirePressure,
     this.evStatus,
+    this.consumption,
   });
 
   factory VehicleStatus.fromJson(Map<String, dynamic> json) {
+    // Get the consumption data from the raw JSON structure
+    Map<String, dynamic>? drivetrain = json['Drivetrain'] as Map<String, dynamic>?;
+    Map<String, dynamic>? fuelSystem = drivetrain?['FuelSystem'] as Map<String, dynamic>?;
+    Map<String, dynamic>? averageFuelEconomy = fuelSystem?['AverageFuelEconomy'] as Map<String, dynamic>?;
+    
+    // Create the consumption data if available
+    ConsumptionData? consumptionData;
+    if (averageFuelEconomy != null) {
+      consumptionData = ConsumptionData(
+        currentDrive: averageFuelEconomy['Drive'] != null ? (averageFuelEconomy['Drive'] as num).toDouble() : null,
+        sinceLastCharge: averageFuelEconomy['AfterRefuel'] != null ? (averageFuelEconomy['AfterRefuel'] as num).toDouble() : null,
+        sinceLastReset: averageFuelEconomy['Accumulated'] != null ? (averageFuelEconomy['Accumulated'] as num).toDouble() : null,
+      );
+    }
+
+    // Get the location data from the raw JSON structure
+    Map<String, dynamic>? locationData = json['Location'] as Map<String, dynamic>?;
+    Location? location;
+    if (locationData != null) {
+      Map<String, dynamic>? geoCoord = locationData['GeoCoord'] as Map<String, dynamic>?;
+      if (geoCoord != null) {
+        location = Location(
+          latitude: geoCoord['Latitude'] != null ? (geoCoord['Latitude'] as num).toDouble() : null,
+          longitude: geoCoord['Longitude'] != null ? (geoCoord['Longitude'] as num).toDouble() : null,
+        );
+      }
+    } else if (json['location'] != null) {
+      Map<String, dynamic> locationJson = json['location'] as Map<String, dynamic>;
+      location = Location(
+        latitude: locationJson['latitude'] != null ? (locationJson['latitude'] as num).toDouble() : null,
+        longitude: locationJson['longitude'] != null ? (locationJson['longitude'] as num).toDouble() : null,
+      );
+    }
+
     return VehicleStatus(
       engine: json['engine'] as bool?,
       climate: json['climate'] as bool?,
@@ -93,23 +126,23 @@ class VehicleStatus {
       hood: json['hood'] as bool?,
       battery: json['battery'] != null ? BatteryStatus.fromJson(json['battery'] as Map<String, dynamic>) : null,
       evBattery: json['evBattery'] != null ? BatteryStatus.fromJson(json['evBattery'] as Map<String, dynamic>) : null,
-      odometer: json['odometer'] != null ? (json['odometer'] as num).toDouble() : null,
+      odometer: drivetrain?['Odometer'] != null ? (drivetrain!['Odometer'] as num).toDouble() : null,
       range: json['range'] != null ? (json['range'] as num).toDouble() : null,
       rangeKm: json['rangeKm'] != null ? (json['rangeKm'] as num).toDouble() : null,
       lastUpdated: json['last_updated'] as String?,
       engineRunning: json['engineRunning'] as bool?,
       doorLock: json['doorLock'] as bool?,
       airTemperature: json['airTemperature'] != null ? AirTemperature.fromJson(json['airTemperature'] as Map<String, dynamic>) : null,
-      location: json['location'] != null ? Location.fromJson(json['location'] as Map<String, dynamic>) : null,
+      location: location,
       defrost: json['defrost'] as bool?,
       steeringWheelHeat: json['steeringWheelHeat'] as bool?,
       sideBackWindowHeat: json['sideBackWindowHeat'] as bool?,
-      tirePressure: json['tirePressure'] != null ? TirePressure.fromJson(json['tirePressure'] as Map<String, dynamic>) : null,
       evStatus: json['evStatus'] != null ? EvStatus.fromJson(json['evStatus'] as Map<String, dynamic>) : null,
+      consumption: consumptionData,
     );
   }
 
-  Map<String, dynamic> toJson() {
+ Map<String, dynamic> toJson() {
     return {
       'engine': engine,
       'climate': climate,
@@ -129,8 +162,28 @@ class VehicleStatus {
       'defrost': defrost,
       'steeringWheelHeat': steeringWheelHeat,
       'sideBackWindowHeat': sideBackWindowHeat,
-      'tirePressure': tirePressure?.toJson(),
       'evStatus': evStatus?.toJson(),
+      'consumption': consumption?.toJson(),
+    };
+  }
+}
+
+class ConsumptionData {
+  final double? currentDrive;
+  final double? sinceLastCharge;
+  final double? sinceLastReset;
+
+  ConsumptionData({
+    this.currentDrive,
+    this.sinceLastCharge,
+    this.sinceLastReset,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'currentDrive': currentDrive,
+      'sinceLastCharge': sinceLastCharge,
+      'sinceLastReset': sinceLastReset,
     };
   }
 }
@@ -200,49 +253,10 @@ class Location {
     this.longitude,
   });
 
-  factory Location.fromJson(Map<String, dynamic> json) {
-    return Location(
-      latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
-      longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
-    );
-  }
-
   Map<String, dynamic> toJson() {
     return {
       'latitude': latitude,
       'longitude': longitude,
-    };
-  }
-}
-
-class TirePressure {
-  final double? frontLeft;
-  final double? frontRight;
-  final double? rearLeft;
-  final double? rearRight;
-
-  TirePressure({
-    this.frontLeft,
-    this.frontRight,
-    this.rearLeft,
-    this.rearRight,
-  });
-
-  factory TirePressure.fromJson(Map<String, dynamic> json) {
-    return TirePressure(
-      frontLeft: json['frontLeft'] != null ? (json['frontLeft'] as num).toDouble() : null,
-      frontRight: json['frontRight'] != null ? (json['frontRight'] as num).toDouble() : null,
-      rearLeft: json['rearLeft'] != null ? (json['rearLeft'] as num).toDouble() : null,
-      rearRight: json['rearRight'] != null ? (json['rearRight'] as num).toDouble() : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'frontLeft': frontLeft,
-      'frontRight': frontRight,
-      'rearLeft': rearLeft,
-      'rearRight': rearRight,
     };
   }
 }

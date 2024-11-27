@@ -61,7 +61,8 @@ class MainActivity: FlutterFragmentActivity() {
                     }
                 }
             } catch (e: Exception) {
-                result.error("PYTHON_ERROR", e.message, e.stackTraceToString())
+                val stackTrace = e.stackTrace.joinToString("\n")
+                result.error("PYTHON_ERROR", e.message, stackTrace)
             }
         }
     }

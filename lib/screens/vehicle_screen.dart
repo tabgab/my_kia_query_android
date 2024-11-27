@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/vehicle_provider.dart';
 import '../models/vehicle.dart';
 
@@ -25,7 +26,17 @@ class _VehicleScreenState extends State<VehicleScreen> {
     await provider.refreshVehicleData();
   }
 
-  Widget _buildLocationSection(Location location) {
+  Future<void> _openInMaps(double latitude, double longitude) async {
+    // Swap latitude and longitude since the API response has them in the wrong order
+    final uri = Uri.https('www.google.com', '/maps', {
+      'q': '$longitude,$latitude',  // Swap order for Google Maps URL format
+    });
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+ Widget _buildLocationSection(Location location) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -34,57 +45,54 @@ class _VehicleScreenState extends State<VehicleScreen> {
           children: [
             const Text('Vehicle Location', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('Latitude: ${location.latitude?.toStringAsFixed(6) ?? 'N/A'}'),
-            Text('Longitude: ${location.longitude?.toStringAsFixed(6) ?? 'N/A'}'),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Latitude: ${location.latitude?.toStringAsFixed(6) ?? 'N/A'}'),
+                      Text('Longitude: ${location.longitude?.toStringAsFixed(6) ?? 'N/A'}'),
+                    ],
+                  ),
+                ),
+                if (location.latitude != null && location.longitude != null)
+                  TextButton.icon(
+                    icon: const Icon(Icons.map),
+                    label: const Text('Open Location in Google Maps'),
+                    onPressed: () => _openInMaps(location.latitude!, location.longitude!),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTirePressureSection(TirePressure tirePressure) {
+  Widget _buildConsumptionSection(ConsumptionData consumption) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Tire Pressure', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Consumption', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Column(
-                  children: [
-                    const Text('Front Left'),
-                    Text('${tirePressure.frontLeft?.toStringAsFixed(1) ?? 'N/A'} bar'),
-                  ],
-                ),
-                Column(
-                  children: [
-                    const Text('Front Right'),
-                    Text('${tirePressure.frontRight?.toStringAsFixed(1) ?? 'N/A'} bar'),
-                  ],
-                ),
-              ],
+            _buildStatusRow(
+              icon: Icons.directions_car,
+              label: 'Current Drive',
+              value: '${consumption.currentDrive?.toStringAsFixed(1) ?? 'N/A'} kWh',
             ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Column(
-                  children: [
-                    const Text('Rear Left'),
-                    Text('${tirePressure.rearLeft?.toStringAsFixed(1) ?? 'N/A'} bar'),
-                  ],
-                ),
-                Column(
-                  children: [
-                    const Text('Rear Right'),
-                    Text('${tirePressure.rearRight?.toStringAsFixed(1) ?? 'N/A'} bar'),
-                  ],
-                ),
-              ],
+            _buildStatusRow(
+              icon: Icons.battery_charging_full,
+              label: 'Since Last Charge',
+              value: '${consumption.sinceLastCharge?.toStringAsFixed(1) ?? 'N/A'} kWh',
+            ),
+            _buildStatusRow(
+              icon: Icons.restart_alt,
+              label: 'Since Last Reset',
+              value: '${consumption.sinceLastReset?.toStringAsFixed(1) ?? 'N/A'} kWh',
             ),
           ],
         ),
@@ -155,6 +163,8 @@ class _VehicleScreenState extends State<VehicleScreen> {
           ),
           if (status != null) ...[
             if (status.location != null) _buildLocationSection(status.location!),
+            if (status.consumption != null) _buildConsumptionSection(status.consumption!),
+            if (status.evStatus != null) _buildEvStatusSection(status.evStatus!),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -196,7 +206,6 @@ class _VehicleScreenState extends State<VehicleScreen> {
                     label: 'Range',
                     value: provider.getFormattedRange(vehicle),
                   ),
-                  // Additional status rows
                   if (status.defrost != null)
                     _buildStatusRow(
                       icon: Icons.ac_unit,
@@ -218,10 +227,6 @@ class _VehicleScreenState extends State<VehicleScreen> {
                 ],
               ),
             ),
-            if (status.tirePressure != null)
-              _buildTirePressureSection(status.tirePressure!),
-            if (status.evStatus != null)
-              _buildEvStatusSection(status.evStatus!),
             const Divider(),
             Padding(
               padding: const EdgeInsets.all(16.0),
