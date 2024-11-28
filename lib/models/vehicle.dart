@@ -118,6 +118,14 @@ class VehicleStatus {
       );
     }
 
+    // Try to get odometer value from either root level or Drivetrain object
+    double? odometerValue;
+    if (json['odometer'] != null) {
+      odometerValue = (json['odometer'] as num).toDouble();
+    } else if (drivetrain?['Odometer'] != null) {
+      odometerValue = (drivetrain!['Odometer'] as num).toDouble();
+    }
+
     return VehicleStatus(
       engine: json['engine'] as bool?,
       climate: json['climate'] as bool?,
@@ -126,7 +134,7 @@ class VehicleStatus {
       hood: json['hood'] as bool?,
       battery: json['battery'] != null ? BatteryStatus.fromJson(json['battery'] as Map<String, dynamic>) : null,
       evBattery: json['evBattery'] != null ? BatteryStatus.fromJson(json['evBattery'] as Map<String, dynamic>) : null,
-      odometer: drivetrain?['Odometer'] != null ? (drivetrain!['Odometer'] as num).toDouble() : null,
+      odometer: odometerValue,
       range: json['range'] != null ? (json['range'] as num).toDouble() : null,
       rangeKm: json['rangeKm'] != null ? (json['rangeKm'] as num).toDouble() : null,
       lastUpdated: json['last_updated'] as String?,

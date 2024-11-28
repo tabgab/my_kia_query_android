@@ -26,6 +26,8 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _canUseBiometrics = false;
   bool _isAuthenticating = true;
   String? _securityPin;
+  bool _obscurePassword = true;
+  bool _obscurePin = true;
 
   @override
   void initState() {
@@ -118,32 +120,48 @@ class _AuthScreenState extends State<AuthScreen> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         final pinController = TextEditingController();
-        return AlertDialog(
-          title: const Text('Enter Security PIN'),
-          content: TextField(
-            controller: pinController,
-            keyboardType: TextInputType.number,
-            maxLength: 6,
-            obscureText: true,
-            decoration: const InputDecoration(
-              hintText: 'Enter your 6-digit PIN',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                final verified = await _authService.verifyPin(pinController.text);
-                Navigator.of(context).pop(verified);
-              },
-              child: const Text('Verify'),
-            ),
-          ],
+        bool obscurePin = true;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Enter Security PIN'),
+              content: TextField(
+                controller: pinController,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                obscureText: obscurePin,
+                decoration: InputDecoration(
+                  hintText: 'Enter your 6-digit PIN',
+                  suffixIcon: IconButton(
+                    icon: Icon(obscurePin ? Icons.visibility : Icons.visibility_off),
+                    onPressed: () => setState(() => obscurePin = !obscurePin),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    final verified = await _authService.verifyPin(pinController.text);
+                    if (!verified && mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Incorrect PIN. Please try again.'),
+                        ),
+                      );
+                    }
+                    Navigator.of(context).pop(verified);
+                  },
+                  child: const Text('Verify'),
+                ),
+              ],
+            );
+          }
         );
       },
     );
@@ -160,55 +178,69 @@ class _AuthScreenState extends State<AuthScreen> {
       builder: (BuildContext context) {
         final pinController = TextEditingController();
         final confirmPinController = TextEditingController();
-        return AlertDialog(
-          title: const Text('Set Security PIN'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: pinController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  hintText: 'Enter 6-digit PIN',
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: confirmPinController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  hintText: 'Confirm PIN',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(null);
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (pinController.text == confirmPinController.text &&
-                    pinController.text.length == 6) {
-                  Navigator.of(context).pop(pinController.text);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('PINs must match and be 6 digits'),
+        bool obscurePin = true;
+        bool obscureConfirmPin = true;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Set Security PIN'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: pinController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    obscureText: obscurePin,
+                    decoration: InputDecoration(
+                      hintText: 'Enter 6-digit PIN',
+                      suffixIcon: IconButton(
+                        icon: Icon(obscurePin ? Icons.visibility : Icons.visibility_off),
+                        onPressed: () => setState(() => obscurePin = !obscurePin),
+                      ),
                     ),
-                  );
-                }
-              },
-              child: const Text('Set PIN'),
-            ),
-          ],
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: confirmPinController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    obscureText: obscureConfirmPin,
+                    decoration: InputDecoration(
+                      hintText: 'Confirm PIN',
+                      suffixIcon: IconButton(
+                        icon: Icon(obscureConfirmPin ? Icons.visibility : Icons.visibility_off),
+                        onPressed: () => setState(() => obscureConfirmPin = !obscureConfirmPin),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(null);
+                  },
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    if (pinController.text == confirmPinController.text &&
+                        pinController.text.length == 6) {
+                      Navigator.of(context).pop(pinController.text);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('PINs must match and be 6 digits'),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Set PIN'),
+                ),
+              ],
+            );
+          }
         );
       },
     );
@@ -267,6 +299,15 @@ class _AuthScreenState extends State<AuthScreen> {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const VehicleScreen()),
         );
+      } else if (mounted) {
+        // Show specific error message based on the error type
+        String errorMessage = provider.error ?? 'Authentication failed. Please check your credentials.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -305,8 +346,14 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'Password'),
-                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                  ),
+                  obscureText: _obscurePassword,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your password';
@@ -317,11 +364,15 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _pinController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'PIN (Optional)',
                     hintText: 'Enter PIN if required',
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscurePin ? Icons.visibility : Icons.visibility_off),
+                      onPressed: () => setState(() => _obscurePin = !_obscurePin),
+                    ),
                   ),
-                  obscureText: true,
+                  obscureText: _obscurePin,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<Region>(

@@ -50,13 +50,16 @@ class KiaBridge:
             for vehicle_id in self.vm.vehicles:
                 vehicle = self.vm.get_vehicle(vehicle_id)
                 print(f"Python: Raw vehicle data for {vehicle.name}:")
-                print(f"Odometer: {vehicle._odometer_value} {vehicle._odometer_unit}")
-                print(f"Battery: {vehicle.data.get('Electronics', {}).get('Battery', {}).get('Level')}")
-                print(f"EV Battery: {vehicle.ev_battery_percentage}")
-                print(f"Range: {vehicle.ev_driving_range} km")
-                print(f"Location: {vehicle.location}")
-                print(f"Temperature: {vehicle.air_temperature}")
                 print(f"Raw data: {vehicle.data}")
+                
+                # Get odometer value from correct path in data structure
+                odometer_value = None
+                try:
+                    drivetrain = vehicle.data.get('Drivetrain', {})
+                    odometer_value = drivetrain.get('Odometer')
+                    print(f"Extracted odometer value: {odometer_value}")
+                except Exception as e:
+                    print(f"Error extracting odometer: {str(e)}")
                 
                 # Format last_updated_at as ISO string if it's a datetime object
                 last_updated = vehicle.last_updated_at
@@ -100,7 +103,7 @@ class KiaBridge:
                             'stateOfCharge': vehicle.ev_battery_percentage,
                             'chargingTime': vehicle.data.get('evStatus', {}).get('remainTime', 'N/A')
                         },
-                        'odometer': vehicle._odometer_value,
+                        'odometer': odometer_value,  # Use extracted odometer value
                         'range': vehicle.ev_driving_range,
                         'rangeKm': vehicle.ev_driving_range,
                         'last_updated': last_updated,
@@ -114,16 +117,9 @@ class KiaBridge:
                             'latitude': location_lat,
                             'longitude': location_lon
                         },
-                        # Additional fields with safe attribute access
                         'defrost': vehicle.defrost_status == 'ON' if hasattr(vehicle, 'defrost_status') else False,
                         'steeringWheelHeat': vehicle.steering_wheel_heat == 'ON' if hasattr(vehicle, 'steering_wheel_heat') else False,
                         'sideBackWindowHeat': vehicle.back_window_heat == 'ON' if hasattr(vehicle, 'back_window_heat') else False,
-                        'tirePressure': {
-                            'frontLeft': vehicle.data.get('tirePressure', {}).get('frontLeft'),
-                            'frontRight': vehicle.data.get('tirePressure', {}).get('frontRight'),
-                            'rearLeft': vehicle.data.get('tirePressure', {}).get('rearLeft'),
-                            'rearRight': vehicle.data.get('tirePressure', {}).get('rearRight')
-                        },
                         'evStatus': {
                             'pluggedIn': vehicle.ev_plugged_status == 'PLUGGED' if hasattr(vehicle, 'ev_plugged_status') else False,
                             'charging': vehicle.ev_charging_status == 'ON' if hasattr(vehicle, 'ev_charging_status') else False,
@@ -157,6 +153,14 @@ class KiaBridge:
                         location_lat = vehicle.location[0]
                         location_lon = vehicle.location[1]
                     
+                    # Get odometer value in fallback
+                    odometer_value = None
+                    try:
+                        drivetrain = vehicle.data.get('Drivetrain', {})
+                        odometer_value = drivetrain.get('Odometer')
+                    except:
+                        pass
+                    
                     vehicle_data = {
                         'id': str(vehicle.id),
                         'name': str(vehicle.name),
@@ -164,7 +168,7 @@ class KiaBridge:
                         'registration_date': str(vehicle.registration_date) if vehicle.registration_date else None,
                         'vehicle_identification_number': str(vehicle.VIN),
                         'status': {
-                            'odometer': float(vehicle._odometer_value) if vehicle._odometer_value else 0,
+                            'odometer': float(odometer_value) if odometer_value is not None else 0,
                             'battery': {
                                 'level': float(vehicle.data.get('Electronics', {}).get('Battery', {}).get('Level', 0)),
                             },
