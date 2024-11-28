@@ -54,12 +54,24 @@ class KiaBridge:
                 
                 # Get odometer value from correct path in data structure
                 odometer_value = None
+                consumption_data = None
                 try:
                     drivetrain = vehicle.data.get('Drivetrain', {})
                     odometer_value = drivetrain.get('Odometer')
                     print(f"Extracted odometer value: {odometer_value}")
+                    
+                    # Extract consumption data
+                    fuel_system = drivetrain.get('FuelSystem', {})
+                    average_fuel_economy = fuel_system.get('AverageFuelEconomy', {})
+                    if average_fuel_economy:
+                        consumption_data = {
+                            'currentDrive': average_fuel_economy.get('Drive'),
+                            'sinceLastCharge': average_fuel_economy.get('AfterRefuel'),
+                            'sinceLastReset': average_fuel_economy.get('Accumulated')
+                        }
+                    print(f"Extracted consumption data: {consumption_data}")
                 except Exception as e:
-                    print(f"Error extracting odometer: {str(e)}")
+                    print(f"Error extracting drivetrain data: {str(e)}")
                 
                 # Format last_updated_at as ISO string if it's a datetime object
                 last_updated = vehicle.last_updated_at
@@ -127,7 +139,8 @@ class KiaBridge:
                             'batteryChargeHV': vehicle.data.get('evStatus', {}).get('batteryChargeHV'),
                             'remainingChargingTime': vehicle.data.get('evStatus', {}).get('remainTime'),
                             'estimatedRange': vehicle.ev_driving_range
-                        }
+                        },
+                        'consumption': consumption_data  # Add consumption data
                     }
                 }
                 vehicle_list.append(vehicle_data)
@@ -153,11 +166,20 @@ class KiaBridge:
                         location_lat = vehicle.location[0]
                         location_lon = vehicle.location[1]
                     
-                    # Get odometer value in fallback
+                    # Get odometer value and consumption data in fallback
                     odometer_value = None
+                    consumption_data = None
                     try:
                         drivetrain = vehicle.data.get('Drivetrain', {})
                         odometer_value = drivetrain.get('Odometer')
+                        fuel_system = drivetrain.get('FuelSystem', {})
+                        average_fuel_economy = fuel_system.get('AverageFuelEconomy', {})
+                        if average_fuel_economy:
+                            consumption_data = {
+                                'currentDrive': average_fuel_economy.get('Drive'),
+                                'sinceLastCharge': average_fuel_economy.get('AfterRefuel'),
+                                'sinceLastReset': average_fuel_economy.get('Accumulated')
+                            }
                     except:
                         pass
                     
@@ -186,7 +208,8 @@ class KiaBridge:
                                 'value': vehicle.air_temperature if hasattr(vehicle, 'air_temperature') else None,
                                 'unit': 'C'
                             },
-                            'last_updated': datetime.now().isoformat()
+                            'last_updated': datetime.now().isoformat(),
+                            'consumption': consumption_data  # Add consumption data in fallback
                         }
                     }
                     vehicle_list.append(vehicle_data)

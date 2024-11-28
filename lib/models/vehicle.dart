@@ -84,19 +84,29 @@ class VehicleStatus {
   });
 
   factory VehicleStatus.fromJson(Map<String, dynamic> json) {
-    // Get the consumption data from the raw JSON structure
-    Map<String, dynamic>? drivetrain = json['Drivetrain'] as Map<String, dynamic>?;
-    Map<String, dynamic>? fuelSystem = drivetrain?['FuelSystem'] as Map<String, dynamic>?;
-    Map<String, dynamic>? averageFuelEconomy = fuelSystem?['AverageFuelEconomy'] as Map<String, dynamic>?;
-    
-    // Create the consumption data if available
+    // Try to get consumption data from either root level or Drivetrain structure
     ConsumptionData? consumptionData;
-    if (averageFuelEconomy != null) {
+    if (json['consumption'] != null) {
+      // Try root level first
+      Map<String, dynamic> consumption = json['consumption'] as Map<String, dynamic>;
       consumptionData = ConsumptionData(
-        currentDrive: averageFuelEconomy['Drive'] != null ? (averageFuelEconomy['Drive'] as num).toDouble() : null,
-        sinceLastCharge: averageFuelEconomy['AfterRefuel'] != null ? (averageFuelEconomy['AfterRefuel'] as num).toDouble() : null,
-        sinceLastReset: averageFuelEconomy['Accumulated'] != null ? (averageFuelEconomy['Accumulated'] as num).toDouble() : null,
+        currentDrive: consumption['currentDrive'] != null ? (consumption['currentDrive'] as num).toDouble() : null,
+        sinceLastCharge: consumption['sinceLastCharge'] != null ? (consumption['sinceLastCharge'] as num).toDouble() : null,
+        sinceLastReset: consumption['sinceLastReset'] != null ? (consumption['sinceLastReset'] as num).toDouble() : null,
       );
+    } else {
+      // Try Drivetrain structure as fallback
+      Map<String, dynamic>? drivetrain = json['Drivetrain'] as Map<String, dynamic>?;
+      Map<String, dynamic>? fuelSystem = drivetrain?['FuelSystem'] as Map<String, dynamic>?;
+      Map<String, dynamic>? averageFuelEconomy = fuelSystem?['AverageFuelEconomy'] as Map<String, dynamic>?;
+      
+      if (averageFuelEconomy != null) {
+        consumptionData = ConsumptionData(
+          currentDrive: averageFuelEconomy['Drive'] != null ? (averageFuelEconomy['Drive'] as num).toDouble() : null,
+          sinceLastCharge: averageFuelEconomy['AfterRefuel'] != null ? (averageFuelEconomy['AfterRefuel'] as num).toDouble() : null,
+          sinceLastReset: averageFuelEconomy['Accumulated'] != null ? (averageFuelEconomy['Accumulated'] as num).toDouble() : null,
+        );
+      }
     }
 
     // Get the location data from the raw JSON structure
@@ -122,8 +132,8 @@ class VehicleStatus {
     double? odometerValue;
     if (json['odometer'] != null) {
       odometerValue = (json['odometer'] as num).toDouble();
-    } else if (drivetrain?['Odometer'] != null) {
-      odometerValue = (drivetrain!['Odometer'] as num).toDouble();
+    } else if (json['Drivetrain']?['Odometer'] != null) {
+      odometerValue = (json['Drivetrain']['Odometer'] as num).toDouble();
     }
 
     return VehicleStatus(

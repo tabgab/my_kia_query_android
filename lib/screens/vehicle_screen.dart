@@ -70,30 +70,33 @@ class _VehicleScreenState extends State<VehicleScreen> {
     );
   }
 
-  Widget _buildConsumptionSection(ConsumptionData consumption) {
+  Widget _buildFuelEconomySection(ConsumptionData consumption) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Consumption', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Fuel Economy', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            _buildStatusRow(
-              icon: Icons.directions_car,
-              label: 'Current Drive',
-              value: '${consumption.currentDrive?.toStringAsFixed(1) ?? 'N/A'} kWh',
-            ),
-            _buildStatusRow(
-              icon: Icons.battery_charging_full,
-              label: 'Since Last Charge',
-              value: '${consumption.sinceLastCharge?.toStringAsFixed(1) ?? 'N/A'} kWh',
-            ),
-            _buildStatusRow(
-              icon: Icons.restart_alt,
-              label: 'Since Last Reset',
-              value: '${consumption.sinceLastReset?.toStringAsFixed(1) ?? 'N/A'} kWh',
-            ),
+            if (consumption.currentDrive != null)
+              _buildStatusRow(
+                icon: Icons.directions_car,
+                label: 'Current Drive',
+                value: '${consumption.currentDrive!.toStringAsFixed(1)} kWh/100km',
+              ),
+            if (consumption.sinceLastCharge != null)
+              _buildStatusRow(
+                icon: Icons.battery_charging_full,
+                label: 'Since Last Charge',
+                value: '${consumption.sinceLastCharge!.toStringAsFixed(1)} kWh/100km',
+              ),
+            if (consumption.sinceLastReset != null)
+              _buildStatusRow(
+                icon: Icons.history,
+                label: 'Since Last Reset',
+                value: '${consumption.sinceLastReset!.toStringAsFixed(1)} kWh/100km',
+              ),
           ],
         ),
       ),
@@ -163,8 +166,8 @@ class _VehicleScreenState extends State<VehicleScreen> {
           ),
           if (status != null) ...[
             if (status.location != null) _buildLocationSection(status.location!),
-            if (status.consumption != null) _buildConsumptionSection(status.consumption!),
             if (status.evStatus != null) _buildEvStatusSection(status.evStatus!),
+            if (status.consumption != null) _buildFuelEconomySection(status.consumption!),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
