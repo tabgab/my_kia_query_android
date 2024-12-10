@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Text Size"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <SeekBar
+        android:id="@+id/textSizeSeekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="24"
+        android:progress="16"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Background Color"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <RadioGroup
+        android:id="@+id/backgroundColorGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="16dp">
+        
+        <RadioButton
+            android:id="@+id/bgBlack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Black"
+            android:checked="true" />
+            
+        <RadioButton
+            android:id="@+id/bgDarkGray"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Dark Gray" />
+            
+        <RadioButton
+            android:id="@+id/bgTransparent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Transparent" />
+    </RadioGroup>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Text Color"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <RadioGroup
+        android:id="@+id/textColorGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="16dp">
+        
+        <RadioButton
+            android:id="@+id/textWhite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="White"
+            android:checked="true" />
+            
+        <RadioButton
+            android:id="@+id/textLightGray"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Light Gray" />
+            
+        <RadioButton
+            android:id="@+id/textBlack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Black" />
+    </RadioGroup>
+
+    <TextView
+        android:id="@+id/previewText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="12V Battery @ 87%"
+        android:padding="8dp"
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/addButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add Widget" />
+
+</LinearLayout>

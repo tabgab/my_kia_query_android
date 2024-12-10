@@ -1,5 +1,6 @@
 buildscript {
     ext.kotlin_version = '1.9.10'
+    ext.chaquopy_version = '13.0.0'
     repositories {
         google()
         mavenCentral()
@@ -9,7 +10,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:8.1.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "com.chaquo.python:gradle:13.0.0"
+        classpath "com.chaquo.python:gradle:$chaquopy_version"
     }
 }
 

@@ -1,11 +1,3 @@
-// File: android/app/build.gradle
-
-plugins {
-    id 'com.android.application'
-    id 'kotlin-android'
-    id 'com.chaquo.python'
-}
-
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
@@ -29,11 +21,14 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'com.chaquo.python'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
     namespace "com.example.my_kia_query"
-    compileSdkVersion 34
+    compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -43,63 +38,43 @@ android {
 
     kotlinOptions {
         jvmTarget = '17'
-        freeCompilerArgs += [
-            '-Xskip-metadata-version-check'
-        ]
     }
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
-        main {
-            python.srcDirs = ['src/main/python']
-        }
     }
 
     defaultConfig {
         applicationId "com.example.my_kia_query"
-        // Set minimum SDK version to 23 for biometric support
-        minSdkVersion Math.max(23, flutter.minSdkVersion)
-        targetSdkVersion 34
+        minSdkVersion 23
+        targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
-
-        // Enable backup
-        resValue "bool", "BACKUP_ENABLED", "true"
 
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
         }
 
         python {
+            version "3.9"
+            buildPython "/usr/bin/python3"
             pip {
                 install "hyundai-kia-connect-api"
             }
-            buildPython "/usr/bin/python3"
-            version "3.9"
         }
     }
 
     buildTypes {
         release {
             signingConfig signingConfigs.debug
-            // Enable shrinking, obfuscation, and optimization for release builds
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            // Enable backup for debug builds as well
-            manifestPlaceholders = [BACKUP_ENABLED: true]
+            minifyEnabled false
+            shrinkResources false
         }
-    }
-
-    // Ensure data persistence
-    aaptOptions {
-        noCompress "xml"
-    }
-
-    lintOptions {
-        checkReleaseBuilds false
     }
 }
 
@@ -108,8 +83,11 @@ flutter {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation "androidx.annotation:annotation:1.7.1"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "androidx.core:core-ktx:1.12.0"
+    implementation "androidx.appcompat:appcompat:1.6.1"
+    implementation "com.google.android.material:material:1.11.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.7.0"
+    implementation "org.json:json:20231013"
 }
-
-// Missing closing brace added here to properly close the build script

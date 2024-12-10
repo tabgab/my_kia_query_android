@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import '../models/vehicle.dart';
+import 'package:path_provider/path_provider.dart';
 
 class VehicleService {
   static const platform = MethodChannel('com.example.my_kia_query/kia_bridge');
@@ -63,9 +65,18 @@ class VehicleService {
           }
         } catch (e) {
           print('Error parsing vehicle: $e');
-          // Continue to next vehicle if one fails to parse
           continue;
         }
+      }
+
+      // Cache the vehicle data for the widget
+      await _cacheVehicleData(result);
+      
+      // Notify the widget about new data
+      try {
+        await platform.invokeMethod('notifyWidget');
+      } catch (e) {
+        print('Error notifying widget: $e');
       }
       
       return vehicles;
@@ -85,6 +96,19 @@ class VehicleService {
     } on PlatformException catch (e) {
       print('Failed to refresh vehicle data: ${e.message}');
       return false;
+    }
+  }
+
+  Future<void> _cacheVehicleData(String jsonData) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final cacheDir = Directory('${directory.path}/cache');
+      await cacheDir.create(recursive: true);
+      final file = File('${cacheDir.path}/vehicle_data.json');
+      await file.writeAsString(jsonData);
+      print('Vehicle data cached successfully');
+    } catch (e) {
+      print('Error caching vehicle data: $e');
     }
   }
 }
