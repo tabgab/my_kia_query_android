@@ -122,3 +122,30 @@
 -dontwarn javax.net.ssl.**
 -keep class org.apache.http.** { *; }
 -dontwarn org.apache.http.**
+
+# ColorPickerView library rules
+-keep class com.skydoves.colorpickerview.** { *; }
+-keep interface com.skydoves.colorpickerview.** { *; }
+-dontwarn com.skydoves.colorpickerview.**
+
+# Widget-related classes
+-keep class android.appwidget.** { *; }
+-keep class android.widget.** { *; }
+-keep class android.app.PendingIntent { *; }
+-keep class android.content.SharedPreferences { *; }
+
+# Keep Widget implementation classes
+-keep class com.example.my_kia_query.widget.** { *; }
+-keepclassmembers class com.example.my_kia_query.widget.** {
+    public <init>(...);
+    public void *(android.content.Context, android.appwidget.AppWidgetManager, int);
+    public void *(android.content.Context, android.content.Intent);
+}
+
+# Keep RemoteViews and related classes
+-keep class android.widget.RemoteViews { *; }
+-keep class android.widget.RemoteViews$* { *; }
+
+# Keep Dialog and Window classes (needed for color picker)
+-keep class android.app.Dialog { *; }
+-keep class android.view.Window { *; }
