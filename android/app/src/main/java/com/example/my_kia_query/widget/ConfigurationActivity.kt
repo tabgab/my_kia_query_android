@@ -1,6 +1,7 @@
 package com.example.my_kia_query.widget
 
 import android.app.Activity
+import android.app.Dialog
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.graphics.Color
@@ -9,15 +10,21 @@ import android.widget.*
 import com.example.my_kia_query.R
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
-import android.view.View
+import android.view.Window
+import com.skydoves.colorpickerview.ColorPickerView
+import com.skydoves.colorpickerview.listeners.ColorListener
+import com.skydoves.colorpickerview.sliders.BrightnessSlideBar
+import com.skydoves.colorpickerview.AlphaTileView
 
 class ConfigurationActivity : Activity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     private lateinit var textSizeSeekBar: SeekBar
-    private lateinit var backgroundColorGroup: RadioGroup
-    private lateinit var textColorGroup: RadioGroup
     private lateinit var previewText: TextView
     private lateinit var addButton: Button
+    private lateinit var changeTextColorButton: Button
+    private lateinit var changeBackgroundColorButton: Button
+    private var currentTextColor = Color.WHITE
+    private var currentBackgroundColor = Color.BLACK
 
     companion object {
         private const val PREFS_NAME = "WidgetConfigPrefs"
@@ -52,16 +59,32 @@ class ConfigurationActivity : Activity() {
         setupViews()
         setupPreviewUpdates()
         setupAddButton()
+        loadSavedColors()
     }
 
     private fun setupViews() {
         textSizeSeekBar = findViewById(R.id.textSizeSeekBar)
-        backgroundColorGroup = findViewById(R.id.backgroundColorGroup)
-        textColorGroup = findViewById(R.id.textColorGroup)
         previewText = findViewById(R.id.previewText)
         addButton = findViewById(R.id.addButton)
+        changeTextColorButton = findViewById(R.id.changeTextColorButton)
+        changeBackgroundColorButton = findViewById(R.id.changeBackgroundColorButton)
+
+        changeTextColorButton.setOnClickListener {
+            showColorPickerDialog(true)
+        }
+
+        changeBackgroundColorButton.setOnClickListener {
+            showColorPickerDialog(false)
+        }
 
         // Set initial preview
+        updatePreview()
+    }
+
+    private fun loadSavedColors() {
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        currentTextColor = prefs.getInt(PREF_TEXT_COLOR + appWidgetId, Color.WHITE)
+        currentBackgroundColor = prefs.getInt(PREF_BG_COLOR + appWidgetId, Color.BLACK)
         updatePreview()
     }
 
@@ -73,41 +96,92 @@ class ConfigurationActivity : Activity() {
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
+    }
 
-        backgroundColorGroup.setOnCheckedChangeListener { _, _ -> updatePreview() }
-        textColorGroup.setOnCheckedChangeListener { _, _ -> updatePreview() }
+    private fun showColorPickerDialog(isTextColor: Boolean) {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.dialog_color_picker)
+        dialog.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.9).toInt(),
+            (resources.displayMetrics.heightPixels * 0.9).toInt()
+        )
+
+        val colorPicker = dialog.findViewById<ColorPickerView>(R.id.colorPicker)
+        val brightnessSlideBar = dialog.findViewById<BrightnessSlideBar>(R.id.brightnessSlide)
+        val alphaTileView = dialog.findViewById<AlphaTileView>(R.id.alphaTileView)
+        val cancelButton = dialog.findViewById<Button>(R.id.cancelButton)
+        val applyButton = dialog.findViewById<Button>(R.id.applyButton)
+
+        // Attach brightness slider
+        colorPicker.attachBrightnessSlider(brightnessSlideBar)
+
+        // Set initial color
+        val initialColor = if (isTextColor) currentTextColor else currentBackgroundColor
+        colorPicker.setInitialColor(initialColor)
+        alphaTileView.setPaintColor(initialColor)
+
+        var selectedColor = initialColor
+
+        colorPicker.setColorListener(object : ColorListener {
+            override fun onColorSelected(color: Int, fromUser: Boolean) {
+                selectedColor = color
+                alphaTileView.setPaintColor(color)
+            }
+        })
+
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        applyButton.setOnClickListener {
+            if (isTextColor) {
+                currentTextColor = selectedColor
+            } else {
+                currentBackgroundColor = selectedColor
+            }
+            updatePreview()
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun updatePreview() {
         val textSize = textSizeSeekBar.progress + 8 // Min text size is 8sp
-        val backgroundColor = getSelectedBackgroundColor()
-        val textColor = getSelectedTextColor()
 
         previewText.textSize = textSize.toFloat()
-        previewText.setTextColor(textColor)
+        previewText.setTextColor(currentTextColor)
 
         val background = GradientDrawable()
-        background.setColor(backgroundColor)
+        background.setColor(currentBackgroundColor)
         background.cornerRadius = resources.displayMetrics.density * 8
         previewText.background = background
+
+        // Update button backgrounds to show current colors
+        val textColorPreview = GradientDrawable()
+        textColorPreview.setColor(currentTextColor)
+        textColorPreview.cornerRadius = resources.displayMetrics.density * 4
+        changeTextColorButton.background = textColorPreview
+
+        val bgColorPreview = GradientDrawable()
+        bgColorPreview.setColor(currentBackgroundColor)
+        bgColorPreview.cornerRadius = resources.displayMetrics.density * 4
+        changeBackgroundColorButton.background = bgColorPreview
+
+        // Ensure button text is visible
+        changeTextColorButton.setTextColor(getContrastColor(currentTextColor))
+        changeBackgroundColorButton.setTextColor(getContrastColor(currentBackgroundColor))
     }
 
-    private fun getSelectedBackgroundColor(): Int {
-        return when (backgroundColorGroup.checkedRadioButtonId) {
-            R.id.bgBlack -> Color.BLACK
-            R.id.bgDarkGray -> Color.DKGRAY
-            R.id.bgTransparent -> Color.TRANSPARENT
-            else -> Color.BLACK
-        }
-    }
+    private fun getContrastColor(color: Int): Int {
+        // Calculate relative luminance
+        val red = Color.red(color) / 255.0
+        val green = Color.green(color) / 255.0
+        val blue = Color.blue(color) / 255.0
+        val luminance = 0.299 * red + 0.587 * green + 0.114 * blue
 
-    private fun getSelectedTextColor(): Int {
-        return when (textColorGroup.checkedRadioButtonId) {
-            R.id.textWhite -> Color.WHITE
-            R.id.textLightGray -> Color.LTGRAY
-            R.id.textBlack -> Color.BLACK
-            else -> Color.WHITE
-        }
+        return if (luminance > 0.5) Color.BLACK else Color.WHITE
     }
 
     private fun setupAddButton() {
@@ -115,8 +189,8 @@ class ConfigurationActivity : Activity() {
             val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit().apply {
                 putInt(PREF_TEXT_SIZE + appWidgetId, textSizeSeekBar.progress + 8)
-                putInt(PREF_BG_COLOR + appWidgetId, getSelectedBackgroundColor())
-                putInt(PREF_TEXT_COLOR + appWidgetId, getSelectedTextColor())
+                putInt(PREF_BG_COLOR + appWidgetId, currentBackgroundColor)
+                putInt(PREF_TEXT_COLOR + appWidgetId, currentTextColor)
                 apply()
             }
 
