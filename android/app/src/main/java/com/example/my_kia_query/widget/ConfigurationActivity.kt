@@ -110,8 +110,7 @@ class ConfigurationActivity : Activity() {
         val colorPicker = dialog.findViewById<ColorPickerView>(R.id.colorPicker)
         val brightnessSlideBar = dialog.findViewById<BrightnessSlideBar>(R.id.brightnessSlide)
         val alphaTileView = dialog.findViewById<AlphaTileView>(R.id.alphaTileView)
-        val cancelButton = dialog.findViewById<Button>(R.id.cancelButton)
-        val applyButton = dialog.findViewById<Button>(R.id.applyButton)
+        val setColorButton = dialog.findViewById<Button>(R.id.applyButton)
 
         // Attach brightness slider
         colorPicker.attachBrightnessSlider(brightnessSlideBar)
@@ -130,11 +129,7 @@ class ConfigurationActivity : Activity() {
             }
         })
 
-        cancelButton.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        applyButton.setOnClickListener {
+        setColorButton.setOnClickListener {
             if (isTextColor) {
                 currentTextColor = selectedColor
             } else {
@@ -159,15 +154,8 @@ class ConfigurationActivity : Activity() {
         previewText.background = background
 
         // Update button backgrounds to show current colors
-        val textColorPreview = GradientDrawable()
-        textColorPreview.setColor(currentTextColor)
-        textColorPreview.cornerRadius = resources.displayMetrics.density * 4
-        changeTextColorButton.background = textColorPreview
-
-        val bgColorPreview = GradientDrawable()
-        bgColorPreview.setColor(currentBackgroundColor)
-        bgColorPreview.cornerRadius = resources.displayMetrics.density * 4
-        changeBackgroundColorButton.background = bgColorPreview
+        changeTextColorButton.setBackgroundColor(currentTextColor)
+        changeBackgroundColorButton.setBackgroundColor(currentBackgroundColor)
 
         // Ensure button text is visible
         changeTextColorButton.setTextColor(getContrastColor(currentTextColor))
