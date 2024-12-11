@@ -14,10 +14,11 @@ import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import com.skydoves.colorpickerview.ColorPickerView
-import com.skydoves.colorpickerview.listeners.ColorListener
+import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
 import com.skydoves.colorpickerview.sliders.BrightnessSlideBar
 import com.skydoves.colorpickerview.sliders.AlphaSlideBar
 import com.skydoves.colorpickerview.AlphaTileView
+import com.skydoves.colorpickerview.ColorEnvelope
 
 class ConfigurationActivity : Activity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
@@ -109,7 +110,6 @@ class ConfigurationActivity : Activity() {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.dialog_color_picker)
         
-        // Set dialog size to 90% of screen width and height
         val window = dialog.window
         if (window != null) {
             val width = (resources.displayMetrics.widthPixels * 0.9).toInt()
@@ -123,38 +123,43 @@ class ConfigurationActivity : Activity() {
         val alphaTileView = dialog.findViewById<AlphaTileView>(R.id.alphaTileView)
         val setColorButton = dialog.findViewById<Button>(R.id.applyButton)
 
-        // Show alpha slider only for background color
+        // Hide alpha slider for text color
         alphaSlideBar.visibility = if (isTextColor) View.GONE else View.VISIBLE
-
-        // Attach sliders
-        colorPicker.attachBrightnessSlider(brightnessSlideBar)
-        if (!isTextColor) {
-            colorPicker.attachAlphaSlider(alphaSlideBar)
-            alphaSlideBar.alpha = currentBackgroundAlpha.toFloat() / 255f
-        }
 
         // Set initial color
         val initialColor = if (isTextColor) currentTextColor else currentBackgroundColor
         colorPicker.setInitialColor(initialColor)
+
+        // Set up the preview
         alphaTileView.setPaintColor(initialColor)
 
-        var selectedColor = initialColor
-        var selectedAlpha = if (isTextColor) 255 else currentBackgroundAlpha
-
-        colorPicker.setColorListener(object : ColorListener {
-            override fun onColorSelected(color: Int, fromUser: Boolean) {
-                selectedColor = color
-                selectedAlpha = Color.alpha(color)
-                alphaTileView.setPaintColor(color)
-            }
+        // Set up the color picker
+        colorPicker.setColorListener(ColorEnvelopeListener { envelope, _ ->
+            val color = envelope.color
+            alphaTileView.setPaintColor(color)
         })
 
+        // Set up the sliders
+        colorPicker.attachBrightnessSlider(brightnessSlideBar)
+        if (!isTextColor) {
+            colorPicker.attachAlphaSlider(alphaSlideBar)
+        }
+
         setColorButton.setOnClickListener {
+            val selectedColor = colorPicker.color
             if (isTextColor) {
-                currentTextColor = selectedColor
+                currentTextColor = Color.rgb(
+                    Color.red(selectedColor),
+                    Color.green(selectedColor),
+                    Color.blue(selectedColor)
+                )
             } else {
-                currentBackgroundColor = selectedColor
-                currentBackgroundAlpha = selectedAlpha
+                currentBackgroundColor = Color.rgb(
+                    Color.red(selectedColor),
+                    Color.green(selectedColor),
+                    Color.blue(selectedColor)
+                )
+                currentBackgroundAlpha = Color.alpha(selectedColor)
             }
             updatePreview()
             dialog.dismiss()

@@ -23,70 +23,23 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Background Color"
+        android:text="Colors"
         android:textStyle="bold"
         android:layout_marginBottom="8dp" />
 
-    <RadioGroup
-        android:id="@+id/backgroundColorGroup"
+    <Button
+        android:id="@+id/changeTextColorButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginBottom="16dp">
-        
-        <RadioButton
-            android:id="@+id/bgBlack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Black"
-            android:checked="true" />
-            
-        <RadioButton
-            android:id="@+id/bgDarkGray"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Dark Gray" />
-            
-        <RadioButton
-            android:id="@+id/bgTransparent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Transparent" />
-    </RadioGroup>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Text Color"
-        android:textStyle="bold"
+        android:text="Change Text Color"
         android:layout_marginBottom="8dp" />
 
-    <RadioGroup
-        android:id="@+id/textColorGroup"
+    <Button
+        android:id="@+id/changeBackgroundColorButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginBottom="16dp">
-        
-        <RadioButton
-            android:id="@+id/textWhite"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="White"
-            android:checked="true" />
-            
-        <RadioButton
-            android:id="@+id/textLightGray"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Light Gray" />
-            
-        <RadioButton
-            android:id="@+id/textBlack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Black" />
-    </RadioGroup>
+        android:text="Change Background Color"
+        android:layout_marginBottom="16dp" />
 
     <TextView
         android:id="@+id/previewText"
