@@ -3,92 +3,63 @@ package com.example.my_kia_query.widget
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import android.content.Context
 import android.util.Log
+import kotlinx.coroutines.*
+import com.chaquo.python.Python
+import com.chaquo.python.android.AndroidPlatform
+import org.json.JSONObject
 import org.json.JSONArray
-import java.io.File
-import kotlin.concurrent.thread
 
 class VehicleUpdateService : Service() {
-    companion object {
-        private const val TAG = "VehicleUpdateService"
-        private const val CACHE_FILE = "vehicle_data.json"
-        private const val DEFAULT_BATTERY_LEVEL = 0
+    private val serviceJob = Job()
+    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
+
+    override fun onBind(intent: Intent): IBinder? {
+        return null
     }
 
-    override fun onBind(intent: Intent): IBinder? = null
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        thread {
-            updateWidgetFromCache()
+        serviceScope.launch {
+            try {
+                if (!Python.isStarted()) {
+                    Python.start(AndroidPlatform(this@VehicleUpdateService))
+                }
+                val py = Python.getInstance()
+                val kiaBridge = py.getModule("kia_bridge")
+
+                val result = withContext(Dispatchers.IO) {
+                    kiaBridge.callAttr("get_vehicles").toString()
+                }
+
+                Log.d("VehicleUpdateService", "Raw result: $result")
+                
+                // Parse the JSON array and get the first vehicle
+                val vehicles = JSONArray(result)
+                if (vehicles.length() > 0) {
+                    val vehicle = vehicles.getJSONObject(0)
+                    val status = vehicle.getJSONObject("status")
+                    val battery = status.getJSONObject("battery")
+                    val batteryLevel = battery.getInt("level")
+                    
+                    Log.d("VehicleUpdateService", "Parsed battery level: $batteryLevel")
+
+                    // Update both widgets
+                    VehicleWidget().updateBatteryLevel(this@VehicleUpdateService, batteryLevel)
+                    GraphicalCarBatteryWidget().updateBatteryLevel(this@VehicleUpdateService, batteryLevel)
+                }
+
+            } catch (e: Exception) {
+                Log.e("VehicleUpdateService", "Error updating widgets", e)
+            } finally {
+                stopSelf(startId)
+            }
         }
+
         return START_NOT_STICKY
     }
 
-    private fun updateWidgetFromCache() {
-        try {
-            // Try all possible cache locations
-            val cacheLocations = listOf(
-                File(applicationContext.filesDir, "cache"),
-                File(applicationContext.cacheDir, "cache"),
-                File(applicationContext.getExternalFilesDir(null), "cache"),
-                File(applicationContext.getExternalFilesDir(null), "app_flutter/cache"),
-                File(applicationContext.filesDir.parentFile, "app_flutter/cache")
-            )
-
-            var jsonData: String? = null
-            var foundLocation: String? = null
-
-            for (cacheDir in cacheLocations) {
-                val cacheFile = File(cacheDir, CACHE_FILE)
-                Log.d(TAG, "Checking cache location: ${cacheFile.absolutePath}")
-                
-                if (cacheFile.exists()) {
-                    jsonData = cacheFile.readText()
-                    foundLocation = cacheFile.absolutePath
-                    Log.d(TAG, "Found cache file at: $foundLocation")
-                    break
-                }
-            }
-
-            if (jsonData == null) {
-                Log.e(TAG, "Cache file not found in any location")
-                return
-            }
-
-            Log.d(TAG, "Reading cache from: $foundLocation")
-            Log.d(TAG, "Cache content: $jsonData")
-
-            val vehicles = JSONArray(jsonData)
-            if (vehicles.length() > 0) {
-                val vehicle = vehicles.getJSONObject(0)
-                val status = vehicle.optJSONObject("status")
-                
-                var batteryLevel = DEFAULT_BATTERY_LEVEL
-                
-                if (status != null) {
-                    val battery = status.optJSONObject("battery")
-                    if (battery != null) {
-                        batteryLevel = battery.optInt("level", DEFAULT_BATTERY_LEVEL)
-                        Log.d(TAG, "Found battery level: $batteryLevel%")
-                    }
-                }
-
-                VehicleWidget().updateBatteryLevel(applicationContext, batteryLevel)
-                Log.d(TAG, "Widget updated with battery level: $batteryLevel%")
-            } else {
-                Log.w(TAG, "No vehicles found in cache data")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error updating widget from cache", e)
-            e.printStackTrace()
-        }
-    }
-
-    class DataUpdateReceiver : android.content.BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val serviceIntent = Intent(context, VehicleUpdateService::class.java)
-            context.startService(serviceIntent)
-        }
+    override fun onDestroy() {
+        super.onDestroy()
+        serviceJob.cancel()
     }
 }
