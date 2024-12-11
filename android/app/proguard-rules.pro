@@ -128,6 +128,12 @@
 -keep interface com.skydoves.colorpickerview.** { *; }
 -dontwarn com.skydoves.colorpickerview.**
 
+# Specific ColorPickerView components
+-keep class com.skydoves.colorpickerview.ColorPickerView { *; }
+-keep class com.skydoves.colorpickerview.listeners.** { *; }
+-keep class com.skydoves.colorpickerview.sliders.** { *; }
+-keep class com.skydoves.colorpickerview.preference.** { *; }
+
 # Widget-related classes
 -keep class android.appwidget.** { *; }
 -keep class android.widget.** { *; }
@@ -149,3 +155,10 @@
 # Keep Dialog and Window classes (needed for color picker)
 -keep class android.app.Dialog { *; }
 -keep class android.view.Window { *; }
+-keep class android.view.WindowManager$LayoutParams { *; }
+
+# Keep View classes used in layouts
+-keep class android.view.View { *; }
+-keep class android.view.ViewGroup { *; }
+-keep class android.widget.ScrollView { *; }
+-keep class android.widget.LinearLayout { *; }
