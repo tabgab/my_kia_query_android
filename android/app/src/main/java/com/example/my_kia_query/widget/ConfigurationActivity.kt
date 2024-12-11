@@ -10,10 +10,13 @@ import android.widget.*
 import com.example.my_kia_query.R
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
+import android.view.View
 import android.view.Window
+import android.view.WindowManager
 import com.skydoves.colorpickerview.ColorPickerView
 import com.skydoves.colorpickerview.listeners.ColorListener
 import com.skydoves.colorpickerview.sliders.BrightnessSlideBar
+import com.skydoves.colorpickerview.sliders.AlphaSlideBar
 import com.skydoves.colorpickerview.AlphaTileView
 
 class ConfigurationActivity : Activity() {
@@ -25,12 +28,14 @@ class ConfigurationActivity : Activity() {
     private lateinit var changeBackgroundColorButton: Button
     private var currentTextColor = Color.WHITE
     private var currentBackgroundColor = Color.BLACK
+    private var currentBackgroundAlpha = 255
 
     companion object {
-        private const val PREFS_NAME = "WidgetConfigPrefs"
-        private const val PREF_TEXT_SIZE = "text_size_"
-        private const val PREF_BG_COLOR = "bg_color_"
-        private const val PREF_TEXT_COLOR = "text_color_"
+        const val PREFS_NAME = "WidgetConfigPrefs"
+        const val PREF_TEXT_SIZE = "text_size_"
+        const val PREF_BG_COLOR = "bg_color_"
+        const val PREF_TEXT_COLOR = "text_color_"
+        const val PREF_BG_ALPHA = "bg_alpha_"
 
         fun loadPreferences(context: Context, appWidgetId: Int): Triple<Int, Int, Int> {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -85,6 +90,7 @@ class ConfigurationActivity : Activity() {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         currentTextColor = prefs.getInt(PREF_TEXT_COLOR + appWidgetId, Color.WHITE)
         currentBackgroundColor = prefs.getInt(PREF_BG_COLOR + appWidgetId, Color.BLACK)
+        currentBackgroundAlpha = prefs.getInt(PREF_BG_ALPHA + appWidgetId, 255)
         updatePreview()
     }
 
@@ -102,18 +108,30 @@ class ConfigurationActivity : Activity() {
         val dialog = Dialog(this)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.dialog_color_picker)
-        dialog.window?.setLayout(
-            (resources.displayMetrics.widthPixels * 0.9).toInt(),
-            (resources.displayMetrics.heightPixels * 0.9).toInt()
-        )
+        
+        // Set dialog size to 90% of screen width and height
+        val window = dialog.window
+        if (window != null) {
+            val width = (resources.displayMetrics.widthPixels * 0.9).toInt()
+            val height = WindowManager.LayoutParams.WRAP_CONTENT
+            window.setLayout(width, height)
+        }
 
         val colorPicker = dialog.findViewById<ColorPickerView>(R.id.colorPicker)
         val brightnessSlideBar = dialog.findViewById<BrightnessSlideBar>(R.id.brightnessSlide)
+        val alphaSlideBar = dialog.findViewById<AlphaSlideBar>(R.id.alphaSlide)
         val alphaTileView = dialog.findViewById<AlphaTileView>(R.id.alphaTileView)
         val setColorButton = dialog.findViewById<Button>(R.id.applyButton)
 
-        // Attach brightness slider
+        // Show alpha slider only for background color
+        alphaSlideBar.visibility = if (isTextColor) View.GONE else View.VISIBLE
+
+        // Attach sliders
         colorPicker.attachBrightnessSlider(brightnessSlideBar)
+        if (!isTextColor) {
+            colorPicker.attachAlphaSlider(alphaSlideBar)
+            alphaSlideBar.alpha = currentBackgroundAlpha.toFloat() / 255f
+        }
 
         // Set initial color
         val initialColor = if (isTextColor) currentTextColor else currentBackgroundColor
@@ -121,10 +139,12 @@ class ConfigurationActivity : Activity() {
         alphaTileView.setPaintColor(initialColor)
 
         var selectedColor = initialColor
+        var selectedAlpha = if (isTextColor) 255 else currentBackgroundAlpha
 
         colorPicker.setColorListener(object : ColorListener {
             override fun onColorSelected(color: Int, fromUser: Boolean) {
                 selectedColor = color
+                selectedAlpha = Color.alpha(color)
                 alphaTileView.setPaintColor(color)
             }
         })
@@ -134,6 +154,7 @@ class ConfigurationActivity : Activity() {
                 currentTextColor = selectedColor
             } else {
                 currentBackgroundColor = selectedColor
+                currentBackgroundAlpha = selectedAlpha
             }
             updatePreview()
             dialog.dismiss()
@@ -149,7 +170,12 @@ class ConfigurationActivity : Activity() {
         previewText.setTextColor(currentTextColor)
 
         val background = GradientDrawable()
-        background.setColor(currentBackgroundColor)
+        background.setColor(Color.argb(
+            currentBackgroundAlpha,
+            Color.red(currentBackgroundColor),
+            Color.green(currentBackgroundColor),
+            Color.blue(currentBackgroundColor)
+        ))
         background.cornerRadius = resources.displayMetrics.density * 8
         previewText.background = background
 
@@ -179,6 +205,7 @@ class ConfigurationActivity : Activity() {
                 putInt(PREF_TEXT_SIZE + appWidgetId, textSizeSeekBar.progress + 8)
                 putInt(PREF_BG_COLOR + appWidgetId, currentBackgroundColor)
                 putInt(PREF_TEXT_COLOR + appWidgetId, currentTextColor)
+                putInt(PREF_BG_ALPHA + appWidgetId, currentBackgroundAlpha)
                 apply()
             }
 
