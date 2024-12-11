@@ -18,6 +18,7 @@ class VehicleWidget : AppWidgetProvider() {
         private const val PREFS_NAME = "VehicleWidgetPrefs"
         private const val KEY_BATTERY = "battery_level"
         private const val ACTION_REFRESH = "com.example.my_kia_query.widget.VOLTAGE_REFRESH"
+        private const val ACTION_CONFIGURE = "com.example.my_kia_query.widget.CONFIGURE"
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
@@ -28,9 +29,18 @@ class VehicleWidget : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        if (intent.action == ACTION_REFRESH) {
-            val serviceIntent = Intent(context, VehicleUpdateService::class.java)
-            context.startService(serviceIntent)
+        when (intent.action) {
+            ACTION_REFRESH -> {
+                val serviceIntent = Intent(context, VehicleUpdateService::class.java)
+                context.startService(serviceIntent)
+            }
+            ACTION_CONFIGURE -> {
+                val configIntent = Intent(context, ConfigurationActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID))
+                }
+                context.startActivity(configIntent)
+            }
         }
     }
 
@@ -62,7 +72,8 @@ class VehicleWidget : AppWidgetProvider() {
                     Color.blue(bgColor)
                 )
             }
-            views.setInt(R.id.voltageText, "setBackgroundColor", alphaColor)
+            views.setInt(R.id.voltageText, "setBackgroundColor", Color.TRANSPARENT) // Clear TextView background
+            views.setInt(R.id.root_layout, "setBackgroundColor", alphaColor) // Set FrameLayout background
 
             // Set up refresh on widget click
             val refreshIntent = Intent(context, VehicleWidget::class.java).apply {
@@ -75,6 +86,19 @@ class VehicleWidget : AppWidgetProvider() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             views.setOnClickPendingIntent(R.id.voltageText, refreshPendingIntent)
+
+            // Set up configuration on settings icon click
+            val configIntent = Intent(context, VehicleWidget::class.java).apply {
+                action = ACTION_CONFIGURE
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            }
+            val configPendingIntent = PendingIntent.getBroadcast(
+                context,
+                appWidgetId, // Use appWidgetId as requestCode to make the PendingIntent unique
+                configIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            views.setOnClickPendingIntent(R.id.settingsButton, configPendingIntent)
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
         } catch (e: Exception) {
