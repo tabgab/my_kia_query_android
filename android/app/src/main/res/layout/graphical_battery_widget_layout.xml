@@ -3,7 +3,7 @@
     android:id="@+id/root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="8dp">
+    android:padding="4dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -26,10 +26,10 @@
             android:layout_alignStart="@id/batteryBaseImage"
             android:layout_alignEnd="@id/batteryBaseImage"
             android:layout_alignBottom="@id/batteryBaseImage"
-            android:layout_marginStart="33dp"
-            android:layout_marginEnd="33dp"
-            android:layout_marginBottom="171dp"
-            android:layout_marginTop="171dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginTop="85dp"
             android:scaleType="fitXY"
             android:src="@drawable/battery_level_rect" />
 
@@ -63,13 +63,13 @@
         <!-- Settings button -->
         <ImageButton
             android:id="@+id/settingsButton"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
             android:layout_alignParentEnd="true"
             android:layout_alignParentTop="true"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_settings"
-            android:padding="4dp" />
+            android:padding="2dp" />
 
     </RelativeLayout>
 </FrameLayout>
