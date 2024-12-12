@@ -69,20 +69,11 @@ class VehicleUpdateService : Service() {
                 var warningLevel = DEFAULT_WARNING_LEVEL
                 
                 if (status != null) {
-                    val electronics = status.optJSONObject("Electronics")
-                    if (electronics != null) {
-                        val battery = electronics.optJSONObject("Battery")
-                        if (battery != null) {
-                            val auxiliary = battery.optJSONObject("Auxiliary")
-                            batteryLevel = battery.optInt("Level", DEFAULT_BATTERY_LEVEL)
-                            
-                            val charging = battery.optJSONObject("Charging")
-                            if (charging != null) {
-                                warningLevel = charging.optInt("WarningLevel", DEFAULT_WARNING_LEVEL)
-                            }
-                            
-                            Log.d(TAG, "Found battery level: $batteryLevel%, warning level: $warningLevel%")
-                        }
+                    val battery = status.optJSONObject("battery")
+                    if (battery != null) {
+                        // Get battery level
+                        batteryLevel = battery.optDouble("level", DEFAULT_BATTERY_LEVEL.toDouble()).toInt()
+                        Log.d(TAG, "Found battery level: $batteryLevel%")
                     }
                 }
 
