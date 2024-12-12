@@ -22,6 +22,8 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
         private const val KEY_WARNING_LEVEL = "warning_level"
         private const val ACTION_REFRESH = "com.example.my_kia_query.widget.GRAPHICAL_BATTERY_REFRESH"
         private const val ACTION_CONFIGURE = "com.example.my_kia_query.widget.GRAPHICAL_BATTERY_CONFIGURE"
+        private const val DEFAULT_BATTERY_LEVEL = 84  // Default from actual data
+        private const val DEFAULT_WARNING_LEVEL = 65  // Standard warning level
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
@@ -38,7 +40,7 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
                 context.startService(serviceIntent)
             }
             ACTION_CONFIGURE -> {
-                val configIntent = Intent(context, ConfigurationActivity::class.java).apply {
+                val configIntent = Intent(context, GraphicalWidgetConfigurationActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID))
                 }
@@ -50,8 +52,8 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
     fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
         try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val batteryLevel = prefs.getInt(KEY_BATTERY, 0)
-            val warningLevel = prefs.getInt(KEY_WARNING_LEVEL, 65)
+            val batteryLevel = prefs.getInt(KEY_BATTERY, DEFAULT_BATTERY_LEVEL)
+            val warningLevel = prefs.getInt(KEY_WARNING_LEVEL, DEFAULT_WARNING_LEVEL)
 
             val views = RemoteViews(context.packageName, R.layout.graphical_battery_widget_layout)
 
@@ -61,12 +63,11 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
             // Set battery level indicator
             views.setImageViewResource(R.id.batteryLevelImage, R.drawable.battery_level)
             
-            // Calculate vertical scale for battery level
-            // The level indicator should fill from bottom to top
+            // Calculate vertical scale for battery level (0.0 to 1.0)
             val scale = batteryLevel / 100f
             views.setFloat(R.id.batteryLevelImage, "setScaleY", scale)
             
-            // Position the level indicator at the bottom of the battery
+            // Position the level indicator at the bottom
             views.setFloat(R.id.batteryLevelImage, "setPivotY", 1f)
 
             // Set battery percentage text
@@ -74,7 +75,7 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
             views.setTextColor(R.id.batteryPercentage, Color.BLACK)
             views.setFloat(R.id.batteryPercentage, "setTextSize", 24f)
 
-            // Show warning if battery level is below warning level
+            // Show warning only if battery level is below warning level
             if (batteryLevel < warningLevel) {
                 views.setViewVisibility(R.id.batteryWarningImage, View.VISIBLE)
                 views.setImageViewResource(R.id.batteryWarningImage, R.drawable.battery_warning)

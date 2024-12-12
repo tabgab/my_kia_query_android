@@ -18,12 +18,23 @@
             android:scaleType="fitCenter"
             android:src="@drawable/battery_base" />
 
+        <!-- Warning indicator -->
+        <ImageView
+            android:id="@+id/batteryWarningImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/battery_warning"
+            android:visibility="gone" />
+
         <!-- Battery level indicator -->
         <ImageView
             android:id="@+id/batteryLevelImage"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_centerInParent="true"
+            android:layout_alignBottom="@id/batteryWarningImage"
             android:scaleType="fitCenter"
             android:src="@drawable/battery_level" />
 
@@ -40,16 +51,6 @@
             android:shadowDx="1"
             android:shadowDy="1"
             android:shadowRadius="2" />
-
-        <!-- Warning indicator -->
-        <ImageView
-            android:id="@+id/batteryWarningImage"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_centerInParent="true"
-            android:scaleType="fitCenter"
-            android:src="@drawable/battery_warning"
-            android:visibility="gone" />
 
         <!-- Settings button -->
         <ImageButton
