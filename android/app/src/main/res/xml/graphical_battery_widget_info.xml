@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="250dp"
-    android:minHeight="250dp"
+    android:minWidth="125dp"
+    android:minHeight="125dp"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/graphical_battery_widget_layout"
     android:configure="com.example.my_kia_query.widget.GraphicalWidgetConfigurationActivity"
