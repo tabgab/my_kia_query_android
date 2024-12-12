@@ -14,6 +14,7 @@ class VehicleUpdateService : Service() {
         private const val TAG = "VehicleUpdateService"
         private const val CACHE_FILE = "vehicle_data.json"
         private const val DEFAULT_BATTERY_LEVEL = 0
+        private const val DEFAULT_WARNING_LEVEL = 65
     }
 
     override fun onBind(intent: Intent): IBinder? = null
@@ -65,17 +66,30 @@ class VehicleUpdateService : Service() {
                 val status = vehicle.optJSONObject("status")
                 
                 var batteryLevel = DEFAULT_BATTERY_LEVEL
+                var warningLevel = DEFAULT_WARNING_LEVEL
                 
                 if (status != null) {
-                    val battery = status.optJSONObject("battery")
-                    if (battery != null) {
-                        batteryLevel = battery.optInt("level", DEFAULT_BATTERY_LEVEL)
-                        Log.d(TAG, "Found battery level: $batteryLevel%")
+                    val electronics = status.optJSONObject("Electronics")
+                    if (electronics != null) {
+                        val battery = electronics.optJSONObject("Battery")
+                        if (battery != null) {
+                            val auxiliary = battery.optJSONObject("Auxiliary")
+                            batteryLevel = battery.optInt("Level", DEFAULT_BATTERY_LEVEL)
+                            
+                            val charging = battery.optJSONObject("Charging")
+                            if (charging != null) {
+                                warningLevel = charging.optInt("WarningLevel", DEFAULT_WARNING_LEVEL)
+                            }
+                            
+                            Log.d(TAG, "Found battery level: $batteryLevel%, warning level: $warningLevel%")
+                        }
                     }
                 }
 
+                // Update both widgets
                 VehicleWidget().updateBatteryLevel(applicationContext, batteryLevel)
-                Log.d(TAG, "Widget updated with battery level: $batteryLevel%")
+                GraphicalCarBatteryWidget().updateBatteryLevel(applicationContext, batteryLevel, warningLevel)
+                Log.d(TAG, "Widgets updated with battery level: $batteryLevel%, warning level: $warningLevel%")
             } else {
                 Log.w(TAG, "No vehicles found in cache data")
             }

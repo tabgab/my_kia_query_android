@@ -12,7 +12,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     
     <queries>
-        <!-- For opening maps -->
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" />
@@ -35,19 +34,17 @@
             android:windowSoftInputMode="adjustResize">
             <meta-data
               android:name="io.flutter.embedding.android.NormalTheme"
-              android:resource="@style/NormalTheme"
-              />
+              android:resource="@style/NormalTheme" />
             <meta-data
               android:name="io.flutter.embedding.android.SplashScreenDrawable"
-              android:resource="@drawable/launch_background"
-              />
+              android:resource="@drawable/launch_background" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
 
-        <!-- Widget Configuration Activity -->
+        <!-- Text Widget Configuration Activity -->
         <activity
             android:name=".widget.ConfigurationActivity"
             android:exported="true"
@@ -57,11 +54,21 @@
             </intent-filter>
         </activity>
 
-        <!-- Widget Provider -->
+        <!-- Graphical Widget Configuration Activity -->
+        <activity
+            android:name=".widget.GraphicalWidgetConfigurationActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+            </intent-filter>
+        </activity>
+
+        <!-- Text Widget Provider -->
         <receiver
             android:name=".widget.VehicleWidget"
             android:exported="true"
-            android:label="12V Battery">
+            android:label="12V Battery (Text)">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="android.appwidget.action.APPWIDGET_ENABLED" />
@@ -72,6 +79,23 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_info" />
+        </receiver>
+
+        <!-- Graphical Widget Provider -->
+        <receiver
+            android:name=".widget.GraphicalCarBatteryWidget"
+            android:exported="true"
+            android:label="12V Battery (Graphical)">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.appwidget.action.APPWIDGET_ENABLED" />
+                <action android:name="android.appwidget.action.APPWIDGET_DELETED" />
+                <action android:name="android.appwidget.action.APPWIDGET_DISABLED" />
+                <action android:name="com.example.my_kia_query.widget.GRAPHICAL_BATTERY_REFRESH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/graphical_battery_widget_info" />
         </receiver>
 
         <!-- Vehicle Update Service -->
