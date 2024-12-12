@@ -11,7 +11,6 @@ import android.content.ComponentName
 import android.graphics.Color
 import android.util.Log
 import android.view.View
-import android.widget.ImageView
 import com.example.my_kia_query.R
 
 class GraphicalCarBatteryWidget : AppWidgetProvider() {
@@ -20,10 +19,12 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
         private const val PREFS_NAME = "GraphicalCarBatteryWidgetPrefs"
         private const val KEY_BATTERY = "battery_level"
         private const val KEY_WARNING_LEVEL = "warning_level"
+        private const val KEY_SIMULATE_LOW = "simulate_low_battery_"
         private const val ACTION_REFRESH = "com.example.my_kia_query.widget.GRAPHICAL_BATTERY_REFRESH"
         private const val ACTION_CONFIGURE = "com.example.my_kia_query.widget.GRAPHICAL_BATTERY_CONFIGURE"
         private const val DEFAULT_BATTERY_LEVEL = 84  // Default from actual data
         private const val DEFAULT_WARNING_LEVEL = 65  // Standard warning level
+        private const val SIMULATED_LOW_BATTERY = 20  // Simulated low battery level
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
@@ -52,22 +53,28 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
     fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
         try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val batteryLevel = prefs.getInt(KEY_BATTERY, DEFAULT_BATTERY_LEVEL)
+            val simulateLow = prefs.getBoolean(KEY_SIMULATE_LOW + appWidgetId, false)
+            
+            // Use simulated level if enabled, otherwise use actual level
+            val batteryLevel = if (simulateLow) {
+                SIMULATED_LOW_BATTERY
+            } else {
+                prefs.getInt(KEY_BATTERY, DEFAULT_BATTERY_LEVEL)
+            }
+            
             val warningLevel = prefs.getInt(KEY_WARNING_LEVEL, DEFAULT_WARNING_LEVEL)
 
             val views = RemoteViews(context.packageName, R.layout.graphical_battery_widget_layout)
 
-            // Set battery base image (always visible)
+            // Set battery base image
             views.setImageViewResource(R.id.batteryBaseImage, R.drawable.battery_base)
 
             // Set battery level indicator
-            views.setImageViewResource(R.id.batteryLevelImage, R.drawable.battery_level)
+            views.setImageViewResource(R.id.batteryLevelImage, R.drawable.battery_level_rect)
             
-            // Calculate vertical scale for battery level (0.0 to 1.0)
+            // Calculate the height based on battery level
             val scale = batteryLevel / 100f
             views.setFloat(R.id.batteryLevelImage, "setScaleY", scale)
-            
-            // Position the level indicator at the bottom
             views.setFloat(R.id.batteryLevelImage, "setPivotY", 1f)
 
             // Set battery percentage text
@@ -75,10 +82,12 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
             views.setTextColor(R.id.batteryPercentage, Color.BLACK)
             views.setFloat(R.id.batteryPercentage, "setTextSize", 24f)
 
-            // Show warning only if battery level is below warning level
+            // Show warning if battery level is below warning level
             if (batteryLevel < warningLevel) {
                 views.setViewVisibility(R.id.batteryWarningImage, View.VISIBLE)
-                views.setImageViewResource(R.id.batteryWarningImage, R.drawable.battery_warning)
+                // Warning should match battery level height
+                views.setFloat(R.id.batteryWarningImage, "setScaleY", scale)
+                views.setFloat(R.id.batteryWarningImage, "setPivotY", 1f)
             } else {
                 views.setViewVisibility(R.id.batteryWarningImage, View.GONE)
             }
@@ -111,7 +120,7 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
             // Update the widget
             appWidgetManager.updateAppWidget(appWidgetId, views)
             
-            Log.d(TAG, "Updated graphical widget $appWidgetId with battery level: $batteryLevel%, warning level: $warningLevel%")
+            Log.d(TAG, "Updated graphical widget $appWidgetId with battery level: $batteryLevel% (simulated: $simulateLow), warning level: $warningLevel%")
         } catch (e: Exception) {
             Log.e(TAG, "Error updating graphical widget $appWidgetId", e)
         }

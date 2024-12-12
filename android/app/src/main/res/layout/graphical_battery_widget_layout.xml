@@ -18,25 +18,33 @@
             android:scaleType="fitCenter"
             android:src="@drawable/battery_base" />
 
-        <!-- Warning indicator -->
-        <ImageView
-            android:id="@+id/batteryWarningImage"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_centerInParent="true"
-            android:scaleType="fitCenter"
-            android:src="@drawable/battery_warning"
-            android:visibility="gone" />
-
         <!-- Battery level indicator -->
         <ImageView
             android:id="@+id/batteryLevelImage"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_centerInParent="true"
-            android:layout_alignBottom="@id/batteryWarningImage"
-            android:scaleType="fitCenter"
-            android:src="@drawable/battery_level" />
+            android:layout_alignStart="@id/batteryBaseImage"
+            android:layout_alignEnd="@id/batteryBaseImage"
+            android:layout_alignBottom="@id/batteryBaseImage"
+            android:layout_marginStart="33dp"
+            android:layout_marginEnd="33dp"
+            android:layout_marginBottom="171dp"
+            android:layout_marginTop="171dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/battery_level_rect" />
+
+        <!-- Warning indicator -->
+        <ImageView
+            android:id="@+id/batteryWarningImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignStart="@id/batteryLevelImage"
+            android:layout_alignEnd="@id/batteryLevelImage"
+            android:layout_alignTop="@id/batteryLevelImage"
+            android:layout_alignBottom="@id/batteryLevelImage"
+            android:scaleType="fitXY"
+            android:src="@drawable/battery_warning"
+            android:visibility="gone" />
 
         <!-- Battery percentage text -->
         <TextView
