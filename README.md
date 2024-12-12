@@ -12,6 +12,18 @@ A Flutter application for monitoring Kia and Hyundai vehicles, providing real-ti
 - PIN-based security fallback
 - Automatic token refresh
 
+### Home Screen Widgets
+- Text Widget: Simple 12V battery level display
+  - Configurable text size and colors
+  - One-tap refresh
+  - Settings configuration
+- Graphical Battery Widget: Visual battery status representation
+  - Dynamic battery level indicator
+  - Centered percentage display
+  - Warning indicator for low battery levels
+  - Visual scaling based on battery percentage
+  - One-tap refresh functionality
+
 ### Vehicle Monitoring / Some of these are not reliable yet.
 - Vehicle status updates - not realtime, we use a saved state from the cloud. 
 - Location tracking with Google Maps integration
@@ -61,6 +73,12 @@ A Flutter application for monitoring Kia and Hyundai vehicles, providing real-ti
 - Secure credential storage using flutter_secure_storage
 - Local authentication with biometric support
 - Shared preferences for user settings
+
+### Android Widgets
+- Native Kotlin implementation
+- Support for both text and graphical displays
+- Shared vehicle data service
+- Configurable appearance and behavior
 
 ### Backend Bridge (Python)
 - Integration with hyundai_kia_connect_api
@@ -118,6 +136,9 @@ flutter build ios
 4. View your vehicle's status information (cached from cloud)
 5. Use the refresh button to update vehicle data
 6. Click on the location to open Google Maps
+7. Add widgets to your home screen:
+   - Choose "12V Battery (Text)" for a simple text display
+   - Choose "12V Battery (Graphical)" for a visual battery representation
 
 ## Security Considerations
 
