@@ -1,77 +1,58 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="4dp">
 
-    <RelativeLayout
+    <!-- Normal battery level (green) -->
+    <ImageView
+        android:id="@+id/batteryLevelImage"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/battery_level_normal" />
 
-        <!-- Battery level indicator -->
-        <ImageView
-            android:id="@+id/batteryLevelImage"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_alignStart="@id/batteryBaseImage"
-            android:layout_alignEnd="@id/batteryBaseImage"
-            android:layout_alignBottom="@id/batteryBaseImage"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginTop="85dp"
-            android:scaleType="fitXY"
-            android:src="@drawable/battery_level_rect" />
+    <!-- Warning indicator (initially hidden) -->
+    <ImageView
+        android:id="@+id/batteryWarningImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/battery_warning_indicator"
+        android:visibility="gone" />
 
-        <!-- Warning indicator -->
-        <ImageView
-            android:id="@+id/batteryWarningImage"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_alignStart="@id/batteryLevelImage"
-            android:layout_alignEnd="@id/batteryLevelImage"
-            android:layout_alignBottom="@id/batteryLevelImage"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginTop="85dp"
-            android:scaleType="fitXY"
-            android:src="@drawable/battery_warning"
-            android:visibility="gone" />
+    <!-- Battery outline (always on top) -->
+    <ImageView
+        android:id="@+id/batteryOutlineImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/battery_outline" />
 
-        <!-- Battery percentage text -->
-        <TextView
-            android:id="@+id/batteryPercentage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:textSize="36sp"
-            android:textStyle="bold"
-            android:textColor="#000000"
-            android:shadowColor="#FFFFFF"
-            android:shadowDx="1"
-            android:shadowDy="1"
-            android:shadowRadius="2" />
+    <!-- Battery percentage text -->
+    <TextView
+        android:id="@+id/batteryPercentage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        android:textColor="#000000"
+        android:fontFamily="sans-serif" />
 
-        <!-- Base battery outline -->
-        <ImageView
-            android:id="@+id/batteryBaseImage"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_centerInParent="true"
-            android:scaleType="fitCenter"
-            android:src="@drawable/battery_base" />
+    <!-- Settings button -->
+    <ImageButton
+        android:id="@+id/settingsButton"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_settings"
+        android:padding="2dp" />
 
-        <!-- Settings button -->
-        <ImageButton
-            android:id="@+id/settingsButton"
-            android:layout_width="8dp"
-            android:layout_height="8dp"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentTop="true"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_settings"
-            android:padding="2dp" />
-
-    </RelativeLayout>
-</FrameLayout>
+</RelativeLayout>

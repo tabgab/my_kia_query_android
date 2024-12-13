@@ -28,19 +28,23 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        Log.d(TAG, "onUpdate called for ${appWidgetIds.size} widgets")
         for (appWidgetId in appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId)
         }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
+        Log.d(TAG, "onReceive called with action: ${intent.action}")
         super.onReceive(context, intent)
         when (intent.action) {
             ACTION_REFRESH -> {
+                Log.d(TAG, "Refresh action received")
                 val serviceIntent = Intent(context, VehicleUpdateService::class.java)
                 context.startService(serviceIntent)
             }
             ACTION_CONFIGURE -> {
+                Log.d(TAG, "Configure action received")
                 val configIntent = Intent(context, GraphicalWidgetConfigurationActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID))
@@ -52,6 +56,8 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
 
     fun updateAppWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
         try {
+            Log.d(TAG, "Starting widget update for ID: $appWidgetId")
+            
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val simulateLow = prefs.getBoolean(KEY_SIMULATE_LOW + appWidgetId, false)
             
@@ -63,34 +69,24 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
             }
             
             val warningLevel = prefs.getInt(KEY_WARNING_LEVEL, DEFAULT_WARNING_LEVEL)
+            Log.d(TAG, "Retrieved values - Battery Level: $batteryLevel, Warning Level: $warningLevel, Simulate Low: $simulateLow")
 
             val views = RemoteViews(context.packageName, R.layout.graphical_battery_widget_layout)
 
-            // Set battery base image
-            views.setImageViewResource(R.id.batteryBaseImage, R.drawable.battery_base)
-
-            // Set battery level indicator
-            views.setImageViewResource(R.id.batteryLevelImage, R.drawable.battery_level_rect)
-            
-            // Calculate the height based on battery level
-            val scale = batteryLevel / 100f
-            views.setFloat(R.id.batteryLevelImage, "setScaleY", scale)
-            views.setFloat(R.id.batteryLevelImage, "setPivotY", 1f)
+            // Show/hide appropriate battery level indicator
+            if (batteryLevel < warningLevel) {
+                views.setViewVisibility(R.id.batteryLevelImage, View.GONE)
+                views.setViewVisibility(R.id.batteryWarningImage, View.VISIBLE)
+                Log.d(TAG, "Showing warning indicator")
+            } else {
+                views.setViewVisibility(R.id.batteryLevelImage, View.VISIBLE)
+                views.setViewVisibility(R.id.batteryWarningImage, View.GONE)
+                Log.d(TAG, "Showing normal battery level")
+            }
 
             // Set battery percentage text
             views.setTextViewText(R.id.batteryPercentage, "${batteryLevel}%")
             views.setTextColor(R.id.batteryPercentage, Color.BLACK)
-            views.setFloat(R.id.batteryPercentage, "setTextSize", 24f)
-
-            // Show warning if battery level is below warning level
-            if (batteryLevel < warningLevel) {
-                views.setViewVisibility(R.id.batteryWarningImage, View.VISIBLE)
-                // Warning should match battery level height
-                views.setFloat(R.id.batteryWarningImage, "setScaleY", scale)
-                views.setFloat(R.id.batteryWarningImage, "setPivotY", 1f)
-            } else {
-                views.setViewVisibility(R.id.batteryWarningImage, View.GONE)
-            }
 
             // Set up refresh on widget click
             val refreshIntent = Intent(context, GraphicalCarBatteryWidget::class.java).apply {
@@ -98,7 +94,7 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
             }
             val refreshPendingIntent = PendingIntent.getBroadcast(
                 context,
-                0,
+                appWidgetId * 10,  // Unique request code
                 refreshIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
@@ -111,7 +107,7 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
             }
             val configPendingIntent = PendingIntent.getBroadcast(
                 context,
-                appWidgetId,
+                appWidgetId * 10 + 1,  // Different unique request code
                 configIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
@@ -119,20 +115,20 @@ class GraphicalCarBatteryWidget : AppWidgetProvider() {
 
             // Update the widget
             appWidgetManager.updateAppWidget(appWidgetId, views)
+            Log.d(TAG, "Widget update completed successfully")
             
-            Log.d(TAG, "Updated graphical widget $appWidgetId with battery level: $batteryLevel% (simulated: $simulateLow), warning level: $warningLevel%")
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating graphical widget $appWidgetId", e)
+            Log.e(TAG, "Error updating widget $appWidgetId", e)
         }
     }
 
     fun updateBatteryLevel(context: Context, batteryLevel: Int, warningLevel: Int) {
+        Log.d(TAG, "updateBatteryLevel called with level: $batteryLevel, warning: $warningLevel")
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().apply {
-            putInt(KEY_BATTERY, batteryLevel)
-            putInt(KEY_WARNING_LEVEL, warningLevel)
-            apply()
-        }
+        prefs.edit()
+            .putInt(KEY_BATTERY, batteryLevel)
+            .putInt(KEY_WARNING_LEVEL, warningLevel)
+            .apply()
 
         val appWidgetManager = AppWidgetManager.getInstance(context)
         val appWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, GraphicalCarBatteryWidget::class.java))
