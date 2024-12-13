@@ -1,31 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp">
 
-    <TextView
+    <!-- Widget Preview -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text="Graphical Battery Widget Configuration"
-        android:textStyle="bold" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="16dp">
 
-    <ImageView
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:layout_gravity="center"
-        android:layout_margin="16dp"
-        android:src="@drawable/battery_base" />
+        <!-- Normal battery level (green) -->
+        <ImageView
+            android:id="@+id/batteryLevelImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter"
+            android:src="@drawable/battery_level_normal" />
 
+        <!-- Warning indicator (initially hidden) -->
+        <ImageView
+            android:id="@+id/batteryWarningImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter"
+            android:src="@drawable/battery_warning_indicator"
+            android:visibility="gone" />
+
+        <!-- Battery outline (always on top) -->
+        <ImageView
+            android:id="@+id/batteryOutlineImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter"
+            android:src="@drawable/battery_outline" />
+
+        <!-- Battery percentage text -->
+        <TextView
+            android:id="@+id/batteryPercentage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#000000"
+            android:fontFamily="sans-serif" />
+    </FrameLayout>
+
+    <!-- Configuration options -->
     <CheckBox
         android:id="@+id/simulateLowBattery"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
-        android:text="Simulate Low Battery (20%)" />
+        android:text="Simulate Low Battery"
+        android:layout_marginBottom="16dp" />
 
     <Button
         android:id="@+id/add_button"

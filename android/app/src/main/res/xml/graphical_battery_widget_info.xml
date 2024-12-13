@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="210dp"
-    android:minHeight="140dp"
-    android:targetCellWidth="3"
-    android:targetCellHeight="2"
+    android:minWidth="180dp"
+    android:minHeight="180dp"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/graphical_battery_widget_layout"
     android:configure="com.example.my_kia_query.widget.GraphicalWidgetConfigurationActivity"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
-    android:previewImage="@drawable/battery_base" />
+    android:previewImage="@drawable/battery_outline" />

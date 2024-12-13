@@ -7,17 +7,26 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.CheckBox
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.RemoteViews
+import android.view.View
 import com.example.my_kia_query.R
 
 class GraphicalWidgetConfigurationActivity : Activity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     private lateinit var simulateLowBattery: CheckBox
+    private lateinit var batteryLevelImage: ImageView
+    private lateinit var batteryWarningImage: ImageView
+    private lateinit var batteryPercentage: TextView
 
     companion object {
         private const val TAG = "GraphicalWidgetConfig"
         private const val PREFS_NAME = "GraphicalCarBatteryWidgetPrefs"
         private const val KEY_SIMULATE_LOW = "simulate_low_battery_"
+        private const val DEFAULT_BATTERY_LEVEL = 84
+        private const val SIMULATED_LOW_BATTERY = 20
+        private const val WARNING_LEVEL = 65
 
         fun loadSimulateLowBattery(context: Activity, appWidgetId: Int): Boolean {
             val prefs = context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
@@ -51,7 +60,19 @@ class GraphicalWidgetConfigurationActivity : Activity() {
             return
         }
 
+        // Initialize views
         simulateLowBattery = findViewById(R.id.simulateLowBattery)
+        batteryLevelImage = findViewById(R.id.batteryLevelImage)
+        batteryWarningImage = findViewById(R.id.batteryWarningImage)
+        batteryPercentage = findViewById(R.id.batteryPercentage)
+
+        // Set initial preview state
+        updatePreview(false)
+
+        // Handle checkbox changes
+        simulateLowBattery.setOnCheckedChangeListener { _, isChecked ->
+            updatePreview(isChecked)
+        }
 
         findViewById<Button>(R.id.add_button).setOnClickListener {
             Log.d(TAG, "Add button clicked")
@@ -98,5 +119,19 @@ class GraphicalWidgetConfigurationActivity : Activity() {
         }
 
         Log.d(TAG, "Configuration activity setup completed")
+    }
+
+    private fun updatePreview(simulateLow: Boolean) {
+        val batteryLevel = if (simulateLow) SIMULATED_LOW_BATTERY else DEFAULT_BATTERY_LEVEL
+        
+        if (batteryLevel < WARNING_LEVEL) {
+            batteryLevelImage.visibility = View.GONE
+            batteryWarningImage.visibility = View.VISIBLE
+        } else {
+            batteryLevelImage.visibility = View.VISIBLE
+            batteryWarningImage.visibility = View.GONE
+        }
+
+        batteryPercentage.text = "${batteryLevel}%"
     }
 }
